@@ -1,3 +1,4 @@
+// routes/index.tsx
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from '../pages/Home';
@@ -7,8 +8,6 @@ import Dashboards from '../pages/Dashboards';
 import Noa from '../pages/Noa';
 import Embedded from '../pages/Embedded';
 import Profile from '../pages/Profile';
-import RegisterPage from '../pages/RegisterPage';
-import LoginPage from '../pages/LoginPage';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -24,15 +23,14 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/" element={<Home />} /> {/* Ruta de respaldo */}
       <Route path="/sources" element={<Sources />} />
       <Route path="/database" element={<Database />} />
       <Route path="/dashboards" element={<Dashboards />} />
       <Route path="/noa" element={<Noa />} />
       <Route path="/embedded" element={<Embedded />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/login" element={<LoginPage onLogin={() => {}} />} />
     </Routes>
   );
 };

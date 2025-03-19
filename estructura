@@ -1,0 +1,25 @@
+noa/
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   ├── Dockerfile.frontend
+│   └── nginx.conf
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── database/
+│   │   ├── services/
+│   │   ├── schemas/
+│   │   └── main.py
+│   ├── requirements.txt
+│   └── Dockerfile.backend
+├── .env
+├── .dockerignore
+└── docker-compose.yml
+
+instalaciones: 
+front:
+npm install axios
+npm install @types/axios --save-dev

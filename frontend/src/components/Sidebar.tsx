@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Database, 
@@ -16,6 +17,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import clsx from 'clsx';
+import { userApiService } from '../services/api/userApi';
 
 const navItems = [
   { icon: Home, label: 'Home', path: '/' },
@@ -30,6 +32,7 @@ const navItems = [
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     clsx(
@@ -44,6 +47,17 @@ const Sidebar = () => {
     'fixed inset-0 bg-white z-50 lg:hidden transition-transform duration-300',
     isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
   );
+
+  const handleLogout = async () => {
+    try {
+      // Invocamos el endpoint de logout mediante el servicio
+      await userApiService.logout();
+      // En caso de que el método no redirija, aseguramos la redirección:
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
 
   const renderNavContent = () => (
     <>
@@ -79,7 +93,7 @@ const Sidebar = () => {
           "flex items-center gap-3 px-4 py-3 text-gray-900 rounded-lg",
           "hover:bg-purple-50 transition-all duration-300 w-full"
         )}
-        onClick={() => {/* Add logout logic */}}
+        onClick={handleLogout}
       >
         <LogOut className="w-5 h-5" />
         {isExpanded && <span>Cerrar Sesión</span>}
@@ -89,7 +103,7 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Mobile Menu Button */}
+      {/* Botón para abrir menú en móvil */}
       <button
         onClick={() => setIsMobileMenuOpen(true)}
         className="lg:hidden fixed top-4 left-4 z-[60] p-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50"
@@ -97,7 +111,7 @@ const Sidebar = () => {
         <Menu className="w-6 h-6 text-gray-900" />
       </button>
 
-      {/* Mobile Sidebar */}
+      {/* Sidebar en móvil */}
       <div className={mobileMenuClasses}>
         <div className="flex flex-col h-full p-4 pt-16">
           <button
@@ -110,7 +124,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Desktop Sidebar */}
+      {/* Sidebar en escritorio */}
       <aside className={clsx(
         "hidden lg:flex flex-col border-r border-gray-200 bg-white",
         "h-screen sticky top-0 px-4 py-6 transition-all duration-300 relative",

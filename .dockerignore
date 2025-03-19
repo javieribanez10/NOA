@@ -1,0 +1,19 @@
+# .dockerignore
+.git
+.github
+.vscode
+node_modules
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.local
+.env.*.local
+.DS_Store
+.dockerignore
+Dockerfile*
+docker-compose*
+README.md
+logs/
+uploads/

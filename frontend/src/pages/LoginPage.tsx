@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { userApiService } from '../services/api';
 
 interface LoginPageProps {
   onLogin: (token: string) => void;
 }
-
-const MOCK_CREDENTIALS = {
-  email: 'demo@example.com',
-  password: 'demo123'
-};
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -19,18 +15,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const navigate = useNavigate();
   const { setUserData } = useUser();
 
+  // Si el usuario ya tiene token, verificamos si es válido
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) validateToken(token);
+  }, []);
+
   const validateToken = async (token: string) => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/users/validate', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        navigate('/');
-      } else {
-        handleTokenExpired();
-      }
+      await userApiService.validateSession();
+      // Si el token es válido, redirigimos a la página principal
+      navigate('/home');
     } catch (error) {
       handleTokenExpired();
     }
@@ -42,36 +37,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setError('La sesión ha expirado. Por favor, inicia sesión nuevamente.');
   };
 
-  const refreshToken = async () => {
+  const fetchUserData = async (token: string) => {
     try {
-      const refresh = localStorage.getItem('refresh_token');
-      if (!refresh) return false;
-
-      const response = await fetch('http://localhost:8000/api/v1/users/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ refresh_token: refresh })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        return true;
-      }
-      return false;
+      const { data } = await userApiService.getCurrentUser();
+      // Los datos ya vienen procesados y transformados a nuestro formato
+      setUserData(data);
     } catch (error) {
-      console.error('Error refreshing token:', error);
-      return false;
+      console.error('Error al obtener datos del usuario:', error);
     }
   };
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) validateToken(token);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,41 +53,29 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setError(null);
   
     try {
-      // Check for mock credentials
-      if (email === MOCK_CREDENTIALS.email && password === MOCK_CREDENTIALS.password) {
-        const mockToken = 'demo-token';
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('token_expires_at', new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
-        onLogin(mockToken);
-        navigate('/');
-        return;
-      }
-
-      const response = await fetch('http://localhost:8000/api/v1/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          username: email,
-          password: password,
-        })
+      const { data } = await userApiService.login({
+        username: email,
+        password: password,
       });
-  
-      const data = await response.json();
 
-      if (response.ok) {
-        localStorage.setItem('token', data.access_token);
+      // Guardar tokens
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      if (data.expires_at) {
         localStorage.setItem('token_expires_at', data.expires_at);
-        await fetchUserData(data.access_token);
-        onLogin(data.access_token);
-        navigate('/');
-      } else {
-        setError(data.detail || 'Error en el inicio de sesión');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Error de conexión al servidor');
+      
+      // Obtener datos del usuario
+      await fetchUserData(data.access_token);
+      
+      // Notificar al componente App
+      onLogin(data.access_token);
+      
+      // Redirigir a la página principal
+      navigate('/home');
+    } catch (error: any) {
+      console.error('Error de login:', error);
+      setError(error.message || 'Error en el inicio de sesión');
     } finally {
       setIsLoading(false);
     }
@@ -132,19 +94,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </p>
           </div>
 
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm">
-            <p className="font-medium mb-1">Credenciales de prueba:</p>
-            <p>Email: {MOCK_CREDENTIALS.email}</p>
-            <p>Contraseña: {MOCK_CREDENTIALS.password}</p>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                 {error}
               </div>
             )}
-
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Correo Electrónico

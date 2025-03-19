@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
+// Interfaz User con campos obligatorios
 interface User {
   id: string;
   email: string;
@@ -10,7 +11,7 @@ interface User {
   country: string;
   division: string;
   isActive: boolean;
-  apiKey: string;
+  apiKey: string;  // Campo controlado por el sistema
   createdAt: string;
   updatedAt: string;
 }
@@ -113,7 +114,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             country: userData.country || '',
             division: userData.division || '',
             isActive: userData.is_active,
-            apiKey: userData.api_key,
+            apiKey: userData.api_key || '',
             createdAt: userData.created_at,
             updatedAt: userData.updated_at
           });
