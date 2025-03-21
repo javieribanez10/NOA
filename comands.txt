@@ -1,0 +1,22 @@
+pip install pygentree
+
+pygentree . -l 5 -e "node_modules,.venv,logs,.git,public,*.pdf,*.zip,*.xlsx,*.txt,README.md,package-lock.json,requirements.txt,__pycache__,dist,build,coverage,.dockerignore,.gitignore"
+
+
+Docker
+
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+docker exec -it noa-postgres-1 bash
+
+
+PostgreSQL
+
+psql -U postgres -d noa_db
+
+tablas: \dt
+
+
+uvicorn app.main:app --reload --log-level debug
+

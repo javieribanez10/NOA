@@ -7,13 +7,16 @@ from app.core.services import init_services
 from app.utils.error_handlers import http_error_handler, CustomException
 from starlette.responses import JSONResponse
 import openai
+
 from app.api.endpoints import users
 from app.api.endpoints import noa  # <-- Importa tu archivo noa.py
-from app.core.logger import logger
 from app.api.endpoints import upload
 from app.api.endpoints import user_files
-from app.api.endpoints import manual_entries  # <-- Importa el nuevo archivo manual_entries.py
+from app.api.endpoints import manual_entries  # <-- Importa el archivo manual_entries.py
 from app.api.endpoints import chat
+from app.api.endpoints import lead  # <-- Importa el endpoint de leads
+
+from app.core.logger import logger
 
 app = FastAPI(title="NOA API")
 
@@ -69,13 +72,15 @@ async def status_check():
 
 # Routers existentes
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-# <-- Agrega el include_router para NOA:
+# <-- Registro de la ruta para NOA:
 app.include_router(noa.router, prefix="/api/v1/noa", tags=["noa"])
 app.include_router(upload.router, prefix="/api/v1/upload", tags=["upload"])
 app.include_router(user_files.router, prefix="/api/v1/user-files", tags=["user_files"])
-# <-- Agrega el include_router para entradas manuales:
+# <-- Registro de la ruta para entradas manuales:
 app.include_router(manual_entries.router, prefix="/api/v1/manual-entries", tags=["manual_entries"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
+# <-- Registro de la ruta para leads:
+app.include_router(lead.router, prefix="/api/v1/leads", tags=["leads"])
 
 @app.get("/")
 async def root():
