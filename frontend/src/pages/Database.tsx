@@ -1,25 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { Search, Filter, Download, MoreVertical, Mail, Phone, MapPin, Building, Tag, Clock, MessageSquare, Calendar, Columns, ChevronDown, Plus, Upload, X, Check, Globe, MessageCircle } from 'lucide-react';
-import Papa from 'papaparse';
-
-interface Customer {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  sector: string;
-  location: string;
-  interestedProduct: string;
-  leadType: 'Caliente' | 'Tibio' | 'Frío';
-  channel: string;
-  firstContact: string;
-  lastContact: string;
-  leadSource: string;
-  conversations: number;
-  avgResponseTime: string;
-  status: 'Completado' | 'En proceso' | 'Perdido' | 'Fuga';
-}
+import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  Search, Filter, Download, MoreVertical, Mail, Phone, MapPin, Building, Tag, Clock, 
+  /* MessageSquare, */ MessageCircle, Calendar, Columns, ChevronDown, Plus, Upload, X, Check, Globe 
+} from 'lucide-react';
+import * as Papa from 'papaparse';
+import { fetchLeads } from '../services/api/leadApi';
+import { Customer } from '../types/customer';
 
 interface ColumnDefinition {
   label: string;
@@ -48,27 +35,6 @@ const COLUMNS: Record<keyof Customer, ColumnDefinition> = {
   status: { label: 'Estado', required: true, type: 'select', options: ['Completado', 'En proceso', 'Perdido', 'Fuga'] }
 };
 
-const mockCustomers: Customer[] = [
-  {
-    id: 1,
-    name: 'María González',
-    email: 'maria@empresa.com',
-    phone: '+56 9 1234 5678',
-    company: 'Tech Solutions SA',
-    sector: 'Tecnología',
-    location: 'Santiago, Chile',
-    interestedProduct: 'Producto A',
-    leadType: 'Caliente',
-    channel: 'Página Web',
-    firstContact: '2024-02-15',
-    lastContact: '2024-03-15',
-    leadSource: 'WhatsApp',
-    conversations: 23,
-    avgResponseTime: '2.5m',
-    status: 'Completado'
-  }
-];
-
 const Database = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSector, setSelectedSector] = useState('all');
@@ -79,7 +45,8 @@ const Database = () => {
   const [visibleColumns, setVisibleColumns] = useState<Array<keyof Customer>>([
     'name', 'email', 'phone', 'company', 'sector', 'channel', 'leadType', 'status'
   ]);
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  // Inicialmente, se carga un array vacío; se actualizará con los datos de la API.
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
     firstContact: new Date().toISOString().split('T')[0],
@@ -90,8 +57,39 @@ const Database = () => {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Efecto para cargar leads desde el backend al montar el componente
+  useEffect(() => {
+    const loadLeads = async () => {
+      console.log("Cargando leads desde la API...");
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchLeads();
+        console.log("Respuesta de la API:", data);
+        if (Array.isArray(data)) {
+          setCustomers(data);
+          console.log("Leads cargados correctamente:", data);
+        } else {
+          console.error("La respuesta no es un array:", data);
+          setError("La respuesta del servidor no es un array");
+          setCustomers([]);
+        }
+      } catch (err) {
+        console.error("Error al cargar los leads:", err);
+        setError("Error al cargar los leads");
+      } finally {
+        setLoading(false);
+        console.log("Carga de leads finalizada. Estado loading:", false);
+      }
+    };
+    loadLeads();
+  }, []);
 
   const downloadTemplate = () => {
+    console.log("Descargando plantilla CSV...");
     const headers = Object.entries(COLUMNS).map(([key, value]) => ({
       label: value.label,
       required: value.required ? '(Requerido)' : '(Opcional)'
@@ -126,16 +124,21 @@ const Database = () => {
     link.href = URL.createObjectURL(blob);
     link.download = 'plantilla_leads.csv';
     link.click();
+    console.log("Plantilla CSV descargada.");
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
+    if (!file) {
+      console.log("No se seleccionó ningún archivo.");
+      return;
+    }
+    console.log("Subiendo archivo CSV:", file.name);
     Papa.parse(file, {
-      complete: (results) => {
+      complete: (results: Papa.ParseResult<any>) => {
         try {
-          const newCustomers = results.data.slice(1).map((row: any[], index) => ({
+          console.log("Resultados del CSV:", results.data);
+          const newCustomers = results.data.slice(1).map((row: any[], index: number) => ({
             id: customers.length + index + 1,
             name: row[1],
             email: row[2],
@@ -153,11 +156,12 @@ const Database = () => {
             avgResponseTime: row[14],
             status: row[15] as Customer['status']
           }));
-
+          console.log("Nuevos leads extraídos del CSV:", newCustomers);
           setCustomers(prev => [...prev, ...newCustomers]);
           setUploadStatus('success');
           setTimeout(() => setUploadStatus('idle'), 3000);
         } catch (error) {
+          console.error("Error al procesar el archivo CSV:", error);
           setUploadStatus('error');
           setTimeout(() => setUploadStatus('idle'), 3000);
         }
@@ -174,7 +178,7 @@ const Database = () => {
       conversations: 0,
       avgResponseTime: '0m'
     } as Customer;
-
+    console.log("Agregando nuevo lead:", customerData);
     setCustomers(prev => [...prev, customerData]);
     setNewCustomer({
       firstContact: new Date().toISOString().split('T')[0],
@@ -227,7 +231,7 @@ const Database = () => {
   };
 
   const toggleColumn = (columnKey: keyof Customer) => {
-    setVisibleColumns(prev => 
+    setVisibleColumns(prev =>
       prev.includes(columnKey)
         ? prev.filter(col => col !== columnKey)
         : [...prev, columnKey]
@@ -235,7 +239,7 @@ const Database = () => {
   };
 
   const toggleAllColumns = () => {
-    setVisibleColumns(prev => 
+    setVisibleColumns(prev =>
       prev.length === Object.keys(COLUMNS).length ? [] : Object.keys(COLUMNS) as Array<keyof Customer>
     );
   };
@@ -243,7 +247,6 @@ const Database = () => {
   const renderColumnHeader = (columnKey: keyof Customer) => {
     const column = COLUMNS[columnKey];
     const Icon = column.icon;
-    
     return (
       <div className="flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4 text-gray-400" />}
@@ -256,23 +259,20 @@ const Database = () => {
     const value = customer[columnKey];
     const column = COLUMNS[columnKey];
     const Icon = column.icon;
-
     if (columnKey === 'status') {
       return (
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(value)}`}>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(String(value))}`}>
           {value}
         </span>
       );
     }
-
     if (columnKey === 'leadType') {
       return (
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLeadTypeColor(value)}`}>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLeadTypeColor(String(value))}`}>
           {value}
         </span>
       );
     }
-
     return (
       <div className="flex items-center gap-2">
         {Icon && <Icon className="w-4 h-4 text-gray-400" />}
@@ -289,6 +289,8 @@ const Database = () => {
       </header>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
+        {loading && <p>Cargando leads...</p>}
+        {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -300,7 +302,7 @@ const Database = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <div className="flex gap-3 flex-wrap">
             <div className="relative">
               <select
@@ -372,7 +374,6 @@ const Database = () => {
                 <span>Columnas</span>
                 <ChevronDown className="w-4 h-4" />
               </button>
-
               {showColumnFilter && (
                 <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-10 p-4">
                   <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
@@ -385,12 +386,12 @@ const Database = () => {
                     </button>
                   </div>
                   <div className="space-y-2">
-                    {(Object.entries(COLUMNS) as [keyof Customer, ColumnDefinition][]).map(([key, { label }]) => (
-                      <label key={key} className="flex items-center gap-2 cursor-pointer">
+                    {(Object.entries(COLUMNS) as [keyof Customer, ColumnDefinition][]).map(([_key, { label }]) => (
+                      <label key={String(_key)} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={visibleColumns.includes(key)}
-                          onChange={() => toggleColumn(key)}
+                          checked={visibleColumns.includes(_key)}
+                          onChange={() => toggleColumn(_key)}
                           className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                         />
                         <span className="text-sm">{label}</span>
@@ -402,7 +403,6 @@ const Database = () => {
             </div>
           </div>
         </div>
-
         {/* Import/Export Section */}
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <div className="flex flex-wrap gap-4 items-center">
@@ -416,7 +416,6 @@ const Database = () => {
                   <Download className="w-4 h-4" />
                   <span>Descargar Plantilla</span>
                 </button>
-                
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -424,7 +423,6 @@ const Database = () => {
                   accept=".csv"
                   className="hidden"
                 />
-                
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-white flex items-center gap-2 text-sm"
@@ -432,14 +430,12 @@ const Database = () => {
                   <Upload className="w-4 h-4" />
                   <span>Subir CSV</span>
                 </button>
-
                 {uploadStatus === 'success' && (
                   <span className="flex items-center gap-1 text-green-600 text-sm">
                     <Check className="w-4 h-4" />
                     Importado con éxito
                   </span>
                 )}
-
                 {uploadStatus === 'error' && (
                   <span className="flex items-center gap-1 text-red-600 text-sm">
                     <X className="w-4 h-4" />
@@ -450,13 +446,12 @@ const Database = () => {
             </div>
           </div>
         </div>
-
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
                 {visibleColumns.map(columnKey => (
-                  <th key={columnKey} className="text-left py-3 px-4">
+                  <th key={String(columnKey)} className="text-left py-3 px-4">
                     {renderColumnHeader(columnKey)}
                   </th>
                 ))}
@@ -467,7 +462,7 @@ const Database = () => {
               {filteredCustomers.map((customer) => (
                 <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50">
                   {visibleColumns.map(columnKey => (
-                    <td key={columnKey} className="py-4 px-4">
+                    <td key={String(columnKey)} className="py-4 px-4">
                       {renderCellContent(customer, columnKey)}
                     </td>
                   ))}
@@ -481,7 +476,6 @@ const Database = () => {
             </tbody>
           </table>
         </div>
-
         {/* Add New Lead Button */}
         <div className="mt-4 flex justify-end">
           <button
@@ -492,7 +486,6 @@ const Database = () => {
             <span>Agregar Lead</span>
           </button>
         </div>
-
         {/* New Customer Form Modal */}
         {showNewCustomerForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -506,11 +499,9 @@ const Database = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
               <form onSubmit={handleNewCustomerSubmit} className="space-y-4">
                 {Object.entries(COLUMNS).map(([key, value]) => {
                   if (key === 'id' || key === 'conversations' || key === 'avgResponseTime') return null;
-                  
                   return (
                     <div key={key}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -520,26 +511,32 @@ const Database = () => {
                       {value.type === 'select' ? (
                         <select
                           value={newCustomer[key as keyof Customer] || ''}
-                          onChange={(e) => setNewCustomer({
-                            ...newCustomer,
-                            [key]: e.target.value
-                          })}
+                          onChange={(e) =>
+                            setNewCustomer({
+                              ...newCustomer,
+                              [key]: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                           required={value.required}
                         >
                           <option value="">Seleccionar...</option>
-                          {value.options?.map(option => (
-                            <option key={option} value={option}>{option}</option>
+                          {value.options?.map((option: string) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
                           ))}
                         </select>
                       ) : (
                         <input
                           type={value.type || 'text'}
                           value={newCustomer[key as keyof Customer] || ''}
-                          onChange={(e) => setNewCustomer({
-                            ...newCustomer,
-                            [key]: e.target.value
-                          })}
+                          onChange={(e) =>
+                            setNewCustomer({
+                              ...newCustomer,
+                              [key]: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                           required={value.required}
                         />
@@ -547,7 +544,6 @@ const Database = () => {
                     </div>
                   );
                 })}
-
                 <div className="flex justify-end gap-3 pt-4">
                   <button
                     type="button"
