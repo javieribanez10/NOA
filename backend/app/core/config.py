@@ -39,16 +39,6 @@ class Settings(BaseSettings):
    # OpenAI
    OPENAI_API_KEY: str
 
-    # Pinecone
-   PINECONE_API_KEY: str
-   PINECONE_ENVIRONMENT: str = "us-east-1"
-   PINECONE_INDEX: str = "webapp"
-   EMBEDDINGS_DIMENSION: int = 3072  
-   PINECONE_MAX_RETRIES: int = 3
-   PINECONE_RETRY_DELAY: float = 1.0
-   CHUNK_SIZE: int = 512
-   BATCH_SIZE: int = 100
-
    # Mail
    MAIL_USERNAME: str
    MAIL_PASSWORD: str

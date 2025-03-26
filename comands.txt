@@ -1,7 +1,5 @@
-pip install pygentree
-
-pygentree . -l 5 -e "node_modules,.venv,logs,.git,public,*.pdf,*.zip,*.xlsx,*.txt,README.md,package-lock.json,requirements.txt,__pycache__,dist,build,coverage,.dockerignore,.gitignore"
-
+App:
+tree
 
 Docker
 
