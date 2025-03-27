@@ -45,6 +45,8 @@ class Settings(BaseSettings):
    MAIL_FROM: str
    MAIL_PORT: int = 587
    MAIL_SERVER: str = "smtp.gmail.com"
+
+   CHUNK_SIZE: int = 100
    
    # Admin settings for pilot program
    ADMIN_EMAIL: str = ""  # Por defecto vacío, se asignará en el init
