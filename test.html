@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prueba del Widget NOA</title>
+</head>
+<body>
+  <h1>Prueba del Widget NOA</h1>
+  <p>Esta es una página de prueba para el widget embebible de NOA.</p>
+  
+  <!-- Bloque de configuración del widget -->
+  <script>
+    window.NOA = {
+      config: {
+        apiKey: 'tu-api-key-aqui',
+        theme: 'light',
+        position: 'bottom-right',
+        type: 'bubble',
+        bubbleConfig: {
+          initialMessage: '¡Hola! ¿En qué puedo ayudarte?',
+          title: 'N.O.A Assistant',
+          subtitle: 'Respuesta en segundos',
+          primaryColor: '#7e22ce',
+          secondaryColor: '#db2777',
+          textColor: '#1f2937',
+          fontSize: '14px',
+          fontFamily: 'Poppins'
+        }
+      }
+    };
+  </script>
+
+  <!-- Cargar el widget (ajusta la URL según cómo sirvas localmente widget.js) -->
+  <script src="http://localhost:5173/widget.js"></script>
+</body>
+</html>

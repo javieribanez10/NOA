@@ -14,27 +14,53 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-interface ChatMessage {
+export interface ChatMessage {
   id: string;
   type: 'user' | 'bot';
   message: string;
   timestamp: Date;
 }
 
-const Embedded = () => {
-  const [widgetType, setWidgetType] = useState('bubble');
-  const [position, setPosition] = useState('bottom-right');
-  const [theme, setTheme] = useState('light');
-  const [bubbleConfig, setBubbleConfig] = useState({
-    initialMessage: '¡Hola! ¿En qué puedo ayudarte?',
-    title: 'N.O.A Assistant',
-    subtitle: 'Respuesta en segundos',
-    primaryColor: '#7e22ce',
-    secondaryColor: '#db2777',
-    textColor: '#1f2937',
-    fontSize: '14px',
-    fontFamily: 'Poppins'
-  });
+interface BubbleConfig {
+  initialMessage: string;
+  title: string;
+  subtitle: string;
+  primaryColor: string;
+  secondaryColor: string;
+  textColor: string;
+  fontSize: string;
+  fontFamily: string;
+}
+
+interface EmbeddedConfig {
+  apiKey?: string;
+  theme?: string;
+  position?: string;
+  type?: string;
+  bubbleConfig?: BubbleConfig;
+}
+
+interface EmbeddedProps {
+  config?: EmbeddedConfig;
+}
+
+const Embedded: React.FC<EmbeddedProps> = ({ config }) => {
+  // Utilizar la configuración pasada vía props o valores por defecto
+  const [widgetType, setWidgetType] = useState(config?.type || 'bubble');
+  const [position, setPosition] = useState(config?.position || 'bottom-right');
+  const [theme, setTheme] = useState(config?.theme || 'light');
+  const [bubbleConfig, setBubbleConfig] = useState<BubbleConfig>(
+    config?.bubbleConfig || {
+      initialMessage: '¡Hola! ¿En qué puedo ayudarte?',
+      title: 'N.O.A Assistant',
+      subtitle: 'Respuesta en segundos',
+      primaryColor: '#7e22ce',
+      secondaryColor: '#db2777',
+      textColor: '#1f2937',
+      fontSize: '14px',
+      fontFamily: 'Poppins'
+    }
+  );
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -116,8 +142,8 @@ const Embedded = () => {
           <div className="space-y-2">
             <button
               className={`w-full p-3 border rounded-xl flex items-center gap-2 transition-all ${
-                widgetType === 'bubble' 
-                  ? 'border-purple-600 bg-purple-50 text-purple-600' 
+                widgetType === 'bubble'
+                  ? 'border-purple-600 bg-purple-50 text-purple-600'
                   : 'border-gray-200 hover:bg-gray-50'
               }`}
               onClick={() => setWidgetType('bubble')}
@@ -130,8 +156,8 @@ const Embedded = () => {
             </button>
             <button
               className={`w-full p-3 border rounded-xl flex items-center gap-2 transition-all ${
-                widgetType === 'embed' 
-                  ? 'border-purple-600 bg-purple-50 text-purple-600' 
+                widgetType === 'embed'
+                  ? 'border-purple-600 bg-purple-50 text-purple-600'
                   : 'border-gray-200 hover:bg-gray-50'
               }`}
               onClick={() => setWidgetType('embed')}
