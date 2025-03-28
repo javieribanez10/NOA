@@ -1,5 +1,4 @@
-App:
-tree
+tree -I "node_modules|venv|logs|.git|public|*.pdf|*.zip|*.xlsx|*.txt|README.md|package-lock.json|requirements.txt|__pycache__|dist|build|coverage" -L 15
 
 Docker
 
@@ -18,3 +17,5 @@ tablas: \dt
 
 uvicorn app.main:app --reload --log-level debug
 
+widget:
+npm run build:widget
