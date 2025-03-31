@@ -18,4 +18,10 @@ tablas: \dt
 uvicorn app.main:app --reload --log-level debug
 
 widget:
-npm run build:widget
+docker build -t noa-widget -f Dockerfile.frontend .
+docker run -p 3334:3334 noa-widget
+
+En la carpeta del html:
+npx serve . -l 3335
+para verlo
+http://localhost:3335/test.html

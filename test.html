@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Prueba del Widget NOA</title>
-    <!-- Para evitar el error del favicon, puedes agregar un favicon dummy -->
     <link rel="icon" href="data:," />
   </head>
   <body>
@@ -15,16 +14,16 @@
     <script>
       window.NOA = {
         config: {
-          apiKey: 'tu-api-key-aqui',
+          apiKey: 'your-api-key',
           theme: 'light',
           position: 'bottom-right',
           type: 'bubble',
           bubbleConfig: {
             initialMessage: '¡Hola! ¿En qué puedo ayudarte?',
-            title: 'N.O.A Assistant',
-            subtitle: 'Respuesta en segundos',
-            primaryColor: '#7e22ce',
-            secondaryColor: '#db2777',
+            title: 'Optica Trento',
+            subtitle: 'Resuelve tus dudas al instante',
+            primaryColor: '#3f9d25',
+            secondaryColor: '#3f9d25',
             textColor: '#1f2937',
             fontSize: '14px',
             fontFamily: 'Poppins'
@@ -33,7 +32,7 @@
       };
     </script>
 
-    <!-- Cargar el widget desde el servidor estático -->
-    <script src="http://localhost:3334/widget.js"></script>
+    <!-- Actualiza la URL del widget para que apunte al puerto correcto -->
+    <script src="http://localhost:5174/widget.js"></script>
   </body>
 </html>

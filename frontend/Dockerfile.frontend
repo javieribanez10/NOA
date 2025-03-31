@@ -13,14 +13,24 @@ RUN npm install
 # Copiar el resto del código al contenedor
 COPY . .
 
-# Ejecutar el build específico para el widget usando la configuración de Vite dedicada
-RUN npm run build:widget
+# Argumento para determinar el modo de build: "app" o "widget"
+ARG MODE=app
 
-# Exponer un puerto para el servidor estático (por ejemplo, 3334)
-EXPOSE 3334
+# Ejecutar el build según el modo especificado y mover la salida a la carpeta "public"
+RUN if [ "$MODE" = "widget" ]; then \
+      npm run build:widget && mkdir -p public && mv widget/* public/; \
+    else \
+      npm run build && mkdir -p public && mv dist/* public/; \
+    fi
+
+# Listar el contenido de la carpeta "public" (para depuración)
+RUN ls -la public
+
+# Exponer el puerto para el servidor estático (se usará el 5173 dentro del contenedor)
+EXPOSE 5173
 
 # Instalar 'serve' de forma global para servir los archivos estáticos
 RUN npm install -g serve
 
-# Comando para servir el contenido del directorio 'dist'
-CMD ["serve", "dist", "-l", "3334"]
+# Definir el comando de arranque (sirve la carpeta "public")
+CMD ["serve", "public", "-l", "5173"]

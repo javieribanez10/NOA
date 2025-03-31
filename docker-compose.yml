@@ -1,20 +1,31 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
-  frontend:
+  frontend-app:
     build:
       context: ./frontend
       dockerfile: Dockerfile.frontend
+      args:
+        MODE: app
     ports:
       - "5173:5173"
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app  # Monta el código fuente
-      - /app/node_modules  # Preserva node_modules del contenedor
     environment:
       - CHOKIDAR_USEPOLLING=true  # Mejora la detección de cambios
+    restart: unless-stopped
+
+  frontend-widget:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+      args:
+        MODE: widget
+    # Mapeamos el puerto interno 5173 a otro puerto en el host (por ejemplo, 5174)
+    ports:
+      - "5174:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
     restart: unless-stopped
 
   backend:
